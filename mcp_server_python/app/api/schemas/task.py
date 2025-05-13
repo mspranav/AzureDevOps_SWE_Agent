@@ -21,12 +21,33 @@ class TaskStatus(str, Enum):
 
 class TaskRequirements(BaseModel):
     """
-    Task requirements schema
+    Task requirements schema with structured fields to encourage
+    effective task descriptions
     """
-    files_to_modify: Optional[List[str]] = None
-    testing_required: Optional[bool] = None
-    additional_context: Optional[str] = None
-    acceptance_criteria: Optional[str] = None
+    # Technical context
+    repository_url: Optional[str] = Field(None, description="URL of the repository to modify")
+    files_to_modify: Optional[List[str]] = Field(None, description="List of files that need to be modified")
+    directories_to_search: Optional[List[str]] = Field(None, description="List of directories to focus on")
+    languages: Optional[List[str]] = Field(None, description="Programming languages relevant for this task")
+    frameworks: Optional[List[str]] = Field(None, description="Frameworks used in the codebase")
+    
+    # Requirements details
+    specific_requirements: Optional[List[str]] = Field(None, description="Specific requirements for the implementation")
+    testing_required: Optional[bool] = Field(True, description="Whether tests should be created or updated")
+    test_frameworks: Optional[List[str]] = Field(None, description="Testing frameworks to use")
+    
+    # Acceptance criteria
+    acceptance_criteria: Optional[List[str]] = Field(None, description="Specific conditions that must be met")
+    performance_requirements: Optional[str] = Field(None, description="Performance expectations if applicable")
+    
+    # Dependencies
+    related_tasks: Optional[List[str]] = Field(None, description="IDs of related tasks")
+    dependent_systems: Optional[List[str]] = Field(None, description="External systems or services that are relevant")
+    
+    # Additional context
+    additional_context: Optional[str] = Field(None, description="Any additional context that might be helpful")
+    do_not_modify: Optional[List[str]] = Field(None, description="Files or components that should not be changed")
+    examples: Optional[str] = Field(None, description="Examples to clarify the expected behavior")
     
     class Config:
         extra = "allow"  # Allow additional fields for flexibility

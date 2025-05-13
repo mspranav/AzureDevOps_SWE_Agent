@@ -236,11 +236,37 @@ curl -X POST http://localhost:8000/api/v1/tasks \
     "azure_devops_id": "123",
     "organization": "your-organization",
     "project": "your-project",
-    "title": "Implement feature X",
-    "description": "Add new functionality for feature X",
+    "title": "Implement account locking after failed login attempts",
+    "description": "Implement a security feature that locks a user account after 5 consecutive failed login attempts. The account should be automatically unlocked after 30 minutes.",
+    "priority": 2,
     "requirements": {
-      "files_to_modify": ["src/feature.js"],
-      "testing_required": true
+      "repository_url": "https://dev.azure.com/organization/project/_git/authentication-service",
+      "files_to_modify": [
+        "src/services/auth.service.ts",
+        "src/models/user.model.ts", 
+        "src/controllers/auth.controller.ts"
+      ],
+      "languages": ["TypeScript"],
+      "frameworks": ["Express", "Sequelize"],
+      "specific_requirements": [
+        "Track the number of failed login attempts for each user",
+        "Lock account after 5 consecutive failed attempts",
+        "Record timestamp when account was locked",
+        "Reject login attempts for locked accounts with specific error message",
+        "Automatically unlock accounts after 30 minutes",
+        "Reset failed attempt counter on successful login"
+      ],
+      "testing_required": true,
+      "test_frameworks": ["Jest"],
+      "acceptance_criteria": [
+        "Unit tests demonstrate correct account locking after 5 failures",
+        "Unit tests demonstrate correct account unlocking after timeout",
+        "Different users' failed attempts don't affect each other",
+        "Login endpoint returns HTTP 403 with 'Account locked' message for locked accounts",
+        "Integration tests verify end-to-end behavior"
+      ],
+      "related_tasks": ["1234", "1235"],
+      "additional_context": "Use the existing database transaction pattern for updates"
     }
   }'
 
@@ -342,6 +368,96 @@ The agent includes several security features:
 - **Limited Access Scope**: Access only to assigned repositories
 - **Secure Credential Storage**: Options for keyring, environment variables, or Azure identity
 - **API Authentication**: API key and JWT authentication for MCP server
+
+## Task Description Guidelines
+
+To maximize the agent's effectiveness, it's important to provide clear, detailed task descriptions. Well-structured tasks enable the agent to understand requirements accurately and implement changes correctly without human intervention.
+
+### Task Description Structure
+
+For optimal results, include the following sections in your Azure DevOps task:
+
+#### 1. Overview
+- Brief summary of what needs to be accomplished (1-3 sentences)
+- The purpose/goal of the change
+
+#### 2. Requirements
+- Detailed, specific list of what needs to be implemented
+- Clear success criteria for the task
+- Links to any relevant documentation or examples
+
+#### 3. Technical Context
+- Repository URL (if not provided via API)
+- Specific files or directories that need modification
+- Any relevant architecture information
+- Related components or systems
+- Framework or language constraints
+
+#### 4. Acceptance Criteria
+- Specific conditions that must be met for the task to be considered complete
+- Expected behavior changes
+- Performance requirements (if applicable)
+- Test coverage expectations
+
+#### 5. Dependencies
+- Links to related tasks or issues
+- External systems or services that are relevant
+- Required environment variables or configuration
+
+### Example of an Effective Task Description
+
+```
+Title: Implement User Account Locking After Failed Login Attempts
+
+Overview:
+Implement a security feature that locks a user account after 5 consecutive failed login attempts. The account should be automatically unlocked after 30 minutes.
+
+Requirements:
+1. Track the number of failed login attempts for each user
+2. If a user fails to log in 5 consecutive times:
+   - Mark the account as temporarily locked
+   - Record the timestamp when the account was locked
+3. Reject login attempts for locked accounts with a specific error message
+4. Automatically unlock accounts after 30 minutes have passed
+5. Reset the failed attempt counter when a successful login occurs
+
+Technical Context:
+- Repository: https://dev.azure.com/organization/project/_git/authentication-service
+- Files to modify:
+  - src/services/auth.service.ts (main authentication logic)
+  - src/models/user.model.ts (add lockout fields to the user model)
+  - src/controllers/auth.controller.ts (update login endpoint responses)
+- Use the existing database transaction pattern for updates
+
+Acceptance Criteria:
+- Unit tests demonstrate correct account locking after 5 failures
+- Unit tests demonstrate correct account unlocking after the timeout
+- Ensure that different users' failed attempts don't affect each other
+- The login endpoint returns HTTP 403 with message "Account locked" for locked accounts
+- Integration tests verify the full behavior in an end-to-end scenario
+
+Dependencies:
+- Database migration task: #1234 (adds required fields to user table)
+- Front-end task for displaying lock messages: #1235
+```
+
+### Tips for Better Task Descriptions
+
+1. **Be specific and concrete**: Avoid vague instructions like "improve performance" - specify what "improved" means (e.g., "reduce API response time by 50%").
+
+2. **Provide context**: The agent needs to understand why a change is needed to implement it correctly.
+
+3. **Include technical details**: List specific files, functions, or data structures that should be modified.
+
+4. **Set boundaries**: Clarify what should NOT be changed if there are parts of the system that should remain untouched.
+
+5. **Use technical terminology**: The agent understands software development concepts and patterns - use them in your descriptions.
+
+6. **Include examples**: For complex changes, providing examples of the expected behavior is very helpful.
+
+7. **Specify priorities**: If some requirements are more important than others, indicate this clearly.
+
+8. **Mention constraints**: Include memory, performance, compatibility, or other constraints that the solution must satisfy.
 
 ## API Reference (MCP Server)
 
