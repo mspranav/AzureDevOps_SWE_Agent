@@ -225,12 +225,43 @@ docker exec azure-devops-agent python -m azure_devops_agent --poll
 
 ### MCP Server API
 
-The MCP server provides a RESTful API:
+#### Authentication
+
+The MCP server uses API key authentication. There are several ways to obtain and manage API keys:
+
+1. **Use pre-configured keys**: 
+   The server comes with default API keys configured in the `.env` file:
+   ```
+   VALID_API_KEYS=dev-api-key,test-api-key
+   ```
+   During development, you can use either "dev-api-key" or "test-api-key" in your requests.
+
+2. **Generate new API keys**:
+   - Edit the `.env` file and add your custom key to the VALID_API_KEYS list:
+     ```
+     VALID_API_KEYS=dev-api-key,test-api-key,your-custom-key
+     ```
+   - Restart the MCP server for changes to take effect
+
+3. **Use API keys in requests**:
+   All API requests must include the API key in the X-API-Key header:
+   ```bash
+   curl -X GET http://localhost:8000/api/v1/tasks \
+     -H "X-API-Key: dev-api-key"
+   ```
+
+4. **Production recommendations**: #TODO
+   - Generate secure, random API keys (e.g., using `openssl rand -hex 32`)
+   - Implement a proper key management system
+   - Enable full authentication with JWT by setting `DISABLE_AUTH=False` in the .env file
+   - Set up key rotation policies and access control
+
+#### API Examples
 
 ```bash
 # Create a new task
 curl -X POST http://localhost:8000/api/v1/tasks \
-  -H "X-API-Key: your-api-key" \
+  -H "X-API-Key: dev-api-key" \
   -H "Content-Type: application/json" \
   -d '{
     "azure_devops_id": "123",
@@ -272,7 +303,19 @@ curl -X POST http://localhost:8000/api/v1/tasks \
 
 # Get task status
 curl -X GET http://localhost:8000/api/v1/tasks/task-uuid \
-  -H "X-API-Key: your-api-key"
+  -H "X-API-Key: dev-api-key"
+
+# List all tasks
+curl -X GET http://localhost:8000/api/v1/tasks \
+  -H "X-API-Key: dev-api-key"
+  
+# Update task status
+curl -X PATCH http://localhost:8000/api/v1/tasks/task-uuid \
+  -H "X-API-Key: dev-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "in_progress"
+  }'
 ```
 
 Python MCP server also provides interactive API documentation at `/docs` when running in development mode.
