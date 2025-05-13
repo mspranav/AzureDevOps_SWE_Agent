@@ -1,0 +1,61 @@
+# Azure DevOps Integration Agent Configuration
+
+# Azure DevOps settings
+azure_devops:
+  organization: "your-organization"  # Azure DevOps organization name
+  project: "your-project"            # Default project name (optional)
+  # If using environment variables for PAT (recommended), leave token blank
+  token: ""                          # Personal access token (or use AZURE_DEVOPS_PAT env var)
+
+# Repository settings
+repository:
+  work_dir: "/app/repos"             # Directory for cloning repositories
+  cleanup: true                      # Whether to clean up repositories after processing
+  default_branch: "main"             # Default target branch for PRs
+
+# Security settings
+security:
+  credential_store: "env"            # Credential store: "keyring", "env", or "azure"
+  audit_log: "/app/logs/audit.log"   # Path to audit log file
+  log_to_azure: false                # Whether to log to Azure Monitor
+  encrypted_config: false            # Whether to encrypt configuration values
+
+# Task processing settings
+task_processing:
+  timeout: 3600                      # Timeout in seconds for task processing
+  max_attempts: 3                    # Maximum attempts for task processing
+  parallel_tasks: 1                  # Number of tasks to process in parallel
+
+# Language support
+languages:
+  default_frameworks:
+    JavaScript: "Jest"                # Default testing framework for JavaScript
+    TypeScript: "Jest"                # Default testing framework for TypeScript
+    Python: "pytest"                  # Default testing framework for Python
+    Java: "JUnit"                     # Default testing framework for Java
+    CSharp: "NUnit"                   # Default testing framework for C#
+    Go: "go test"                     # Default testing framework for Go
+    Ruby: "RSpec"                     # Default testing framework for Ruby
+    PHP: "PHPUnit"                    # Default testing framework for PHP
+    Rust: "cargo test"                # Default testing framework for Rust
+
+# API settings (if implementing a REST API)
+api:
+  enabled: false                      # Whether to enable the API
+  host: "0.0.0.0"                     # Host to bind to
+  port: 8080                          # Port to listen on
+  auth_required: true                 # Whether authentication is required
+
+# Logging settings
+logging:
+  level: "INFO"                       # Logging level: DEBUG, INFO, WARNING, ERROR
+  format: "structured"                # Logging format: "structured" or "text"
+  file: "/app/logs/agent.log"         # Path to log file
+  max_size: 10                        # Maximum log file size in MB
+  backup_count: 5                     # Number of log files to keep
+
+# Performance settings
+performance:
+  cache_enabled: true                 # Whether to enable caching
+  cache_ttl: 3600                     # Cache TTL in seconds
+  db_enabled: false                   # Whether to use database for persistence

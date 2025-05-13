@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  azure-devops-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: azure-devops-agent
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./repos:/app/repos
+    environment:
+      - AZURE_DEVOPS_PAT=${AZURE_DEVOPS_PAT}
+      - AZURE_DEVOPS_ORG=${AZURE_DEVOPS_ORG}
+      - AZURE_DEVOPS_PROJECT=${AZURE_DEVOPS_PROJECT}
+      - LOG_LEVEL=INFO
+      - CREDENTIAL_STORE=env
+    ports:
+      - "8080:8080"  # If implementing a REST API
+    restart: unless-stopped
+    # Command can be overridden with specific task ID
+    command: ["--config", "/app/config/agent_config.yaml"]
+
+  # Optional database for persistent storage
+  db:
+    image: postgres:15
+    container_name: azure-devops-agent-db
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+
+  # Optional Redis for caching
+  redis:
+    image: redis:7
+    container_name: azure-devops-agent-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  postgres-data:
+  redis-data:
