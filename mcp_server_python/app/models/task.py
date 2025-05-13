@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
@@ -38,15 +38,15 @@ class Task(Base):
         index=True,
         comment="Current status of the task"
     )
-    repository_id = Column(UUID(as_uuid=True), ForeignKey("repository.id"), nullable=True, comment="ID of the associated repository")
-    requirements = Column(JSONB, nullable=False, default={}, comment="JSON object with task requirements")
-    analysis = Column(JSONB, nullable=False, default={}, comment="JSON object with task analysis results")
-    result = Column(JSONB, nullable=False, default={}, comment="JSON object with task processing results")
+    repository_id = Column(String(36), ForeignKey("repository.id"), nullable=True, comment="ID of the associated repository")
+    requirements = Column(String, nullable=False, default="{}", comment="JSON object with task requirements")
+    analysis = Column(String, nullable=False, default="{}", comment="JSON object with task analysis results")
+    result = Column(String, nullable=False, default="{}", comment="JSON object with task processing results")
     started_at = Column(DateTime, nullable=True, comment="When task processing started")
     completed_at = Column(DateTime, nullable=True, comment="When task processing completed")
     error = Column(Text, nullable=True, comment="Error message if task failed")
     priority = Column(Integer, nullable=False, default=0, comment="Task priority (higher number = higher priority)")
-    metadata = Column(JSONB, nullable=False, default={}, comment="Additional metadata for the task")
+    metadata = Column(String, nullable=False, default="{}", comment="Additional metadata for the task")
     
     # Relationships
     repository = relationship("Repository", back_populates="tasks")

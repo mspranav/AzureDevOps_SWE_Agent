@@ -16,10 +16,7 @@ logger = get_logger(__name__)
 engine = create_async_engine(
     str(settings.DATABASE_URL),
     echo=settings.DEBUG,
-    pool_size=settings.DATABASE_POOL_SIZE,
-    max_overflow=settings.DATABASE_MAX_OVERFLOW,
-    pool_timeout=settings.DATABASE_POOL_TIMEOUT,
-    pool_pre_ping=True,
+    future=True,
 )
 
 # Create async session factory

@@ -6,7 +6,6 @@ import enum
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import Column, Enum, ForeignKey, Index, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
@@ -32,7 +31,7 @@ class CodeGeneration(Base):
     
     # Columns
     task_id = Column(
-        UUID(as_uuid=True), 
+        String(36), 
         ForeignKey("task.id"), 
         nullable=False,
         index=True,
@@ -47,7 +46,7 @@ class CodeGeneration(Base):
         default=CodeGenerationAction.CREATE,
         comment="Action being performed on the file"
     )
-    requirements = Column(JSONB, nullable=False, default={}, comment="Requirements for code generation")
+    requirements = Column(String, nullable=False, default="{}", comment="Requirements for code generation")
     original_code = Column(Text, nullable=True, comment="Original code before modification (for modify action)")
     generated_code = Column(Text, nullable=True, comment="Generated code implementation")
     test_code = Column(Text, nullable=True, comment="Generated test code (if applicable)")
@@ -62,8 +61,8 @@ class CodeGeneration(Base):
         comment="Status of code generation"
     )
     error = Column(Text, nullable=True, comment="Error message if code generation failed")
-    metrics = Column(JSONB, nullable=False, default={}, comment="Generation metrics (tokens, time, etc.)")
-    metadata = Column(JSONB, nullable=False, default={}, comment="Additional metadata for code generation")
+    metrics = Column(String, nullable=False, default="{}", comment="Generation metrics (tokens, time, etc.)")
+    metadata = Column(String, nullable=False, default="{}", comment="Additional metadata for code generation")
     
     # Relationships
     task = relationship("Task", back_populates="code_generations")
@@ -78,8 +77,16 @@ class CodeGeneration(Base):
         Returns:
             Dictionary representation
         """
+        import json
         result = super().dict()
         
+        # Parse JSON strings to dictionaries
+        for json_field in ["requirements", "metrics", "metadata"]:
+            try:
+                result[json_field] = json.loads(result[json_field])
+            except (TypeError, json.JSONDecodeError):
+                result[json_field] = {}
+                
         # Optionally exclude code contents
         if not include_code:
             result.pop("original_code", None)

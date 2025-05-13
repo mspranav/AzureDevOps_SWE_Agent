@@ -5,8 +5,9 @@ Task API schemas
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
+import json
 
-from pydantic import BaseModel, Field, UUID4
+from pydantic import BaseModel, Field, validator
 
 
 class TaskStatus(str, Enum):
@@ -60,7 +61,7 @@ class TaskUpdate(BaseModel):
     status: Optional[TaskStatus] = None
     priority: Optional[int] = None
     requirements: Optional[TaskRequirements] = None
-    repository_id: Optional[UUID4] = None
+    repository_id: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
 
 
@@ -68,7 +69,7 @@ class RepositorySummary(BaseModel):
     """
     Repository summary schema for task responses
     """
-    id: UUID4
+    id: str
     name: str
     url: str
 
@@ -77,7 +78,7 @@ class PullRequestSummary(BaseModel):
     """
     Pull request summary schema for task responses
     """
-    id: UUID4
+    id: str
     title: str
     status: str
     url: Optional[str] = None
@@ -87,7 +88,7 @@ class TaskRead(TaskBase):
     """
     Task read schema - returned in responses
     """
-    id: UUID4
+    id: str
     status: TaskStatus
     created_at: datetime
     updated_at: datetime
@@ -99,6 +100,15 @@ class TaskRead(TaskBase):
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
+    
+    @validator("analysis", "result", "metadata", pre=True)
+    def parse_json(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return {}
+        return v
     
     class Config:
         orm_mode = True

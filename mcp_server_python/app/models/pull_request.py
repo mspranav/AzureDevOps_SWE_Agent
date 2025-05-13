@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Index, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
@@ -26,14 +25,14 @@ class PullRequest(Base):
     
     # Columns
     task_id = Column(
-        UUID(as_uuid=True), 
+        String(36), 
         ForeignKey("task.id"), 
         nullable=False,
         index=True,
         comment="ID of the associated task"
     )
     repository_id = Column(
-        UUID(as_uuid=True), 
+        String(36), 
         ForeignKey("repository.id"), 
         nullable=False,
         index=True,
@@ -52,14 +51,14 @@ class PullRequest(Base):
         comment="Current status of the pull request"
     )
     url = Column(String, nullable=True, comment="URL to the pull request")
-    changed_files = Column(JSONB, nullable=False, default=[], comment="List of files changed in the PR")
-    reviewers = Column(JSONB, nullable=False, default=[], comment="List of PR reviewers")
+    changed_files = Column(String, nullable=False, default="[]", comment="List of files changed in the PR")
+    reviewers = Column(String, nullable=False, default="[]", comment="List of PR reviewers")
     created_in_azure_devops = Column(Boolean, nullable=False, default=False, comment="Whether the PR was created in Azure DevOps")
     created_in_azure_devops_at = Column(DateTime, nullable=True, comment="When the PR was created in Azure DevOps")
     merged_at = Column(DateTime, nullable=True, comment="When the PR was merged")
     closed_at = Column(DateTime, nullable=True, comment="When the PR was closed")
-    metrics = Column(JSONB, nullable=False, default={}, comment="PR metrics (size, time to merge, etc.)")
-    metadata = Column(JSONB, nullable=False, default={}, comment="Additional metadata for the PR")
+    metrics = Column(String, nullable=False, default="{}", comment="PR metrics (size, time to merge, etc.)")
+    metadata = Column(String, nullable=False, default="{}", comment="Additional metadata for the PR")
     
     # Relationships
     task = relationship("Task", back_populates="pull_request")
@@ -67,7 +66,29 @@ class PullRequest(Base):
     
     def dict(self) -> Dict[str, Any]:
         """Convert model to dictionary with nested relationships"""
+        import json
         result = super().dict()
+        
+        # Parse JSON strings to dictionaries/lists
+        try:
+            result["changed_files"] = json.loads(result["changed_files"])
+        except (TypeError, json.JSONDecodeError):
+            result["changed_files"] = []
+            
+        try:
+            result["reviewers"] = json.loads(result["reviewers"])
+        except (TypeError, json.JSONDecodeError):
+            result["reviewers"] = []
+            
+        try:
+            result["metrics"] = json.loads(result["metrics"])
+        except (TypeError, json.JSONDecodeError):
+            result["metrics"] = {}
+            
+        try:
+            result["metadata"] = json.loads(result["metadata"])
+        except (TypeError, json.JSONDecodeError):
+            result["metadata"] = {}
         
         # Add nested repository info
         if self.repository:

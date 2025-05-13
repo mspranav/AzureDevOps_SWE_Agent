@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import Column, DateTime, Index, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
@@ -22,13 +21,13 @@ class Repository(Base):
     project = Column(String, nullable=False, comment="Azure DevOps project")
     repository_id = Column(String, nullable=False, comment="Repository ID in Azure DevOps")
     default_branch = Column(String, nullable=False, default="main", comment="Default branch name")
-    analysis = Column(JSONB, nullable=False, default={}, comment="Repository analysis results")
-    languages = Column(JSONB, nullable=False, default={}, comment="Detected languages and their percentages")
-    frameworks = Column(JSONB, nullable=False, default={}, comment="Detected frameworks")
-    code_style = Column(JSONB, nullable=False, default={}, comment="Detected code style preferences")
+    analysis = Column(String, nullable=False, default="{}", comment="Repository analysis results")
+    languages = Column(String, nullable=False, default="{}", comment="Detected languages and their percentages")
+    frameworks = Column(String, nullable=False, default="{}", comment="Detected frameworks")
+    code_style = Column(String, nullable=False, default="{}", comment="Detected code style preferences")
     last_analyzed_at = Column(DateTime, nullable=True, comment="When the repository was last analyzed")
     last_cloned_at = Column(DateTime, nullable=True, comment="When the repository was last cloned")
-    metadata = Column(JSONB, nullable=False, default={}, comment="Additional metadata for the repository")
+    metadata = Column(String, nullable=False, default="{}", comment="Additional metadata for the repository")
     
     # Relationships
     tasks = relationship("Task", back_populates="repository")
@@ -42,16 +41,24 @@ class Repository(Base):
     
     def dict(self) -> Dict[str, Any]:
         """Convert model to dictionary with calculated properties"""
+        import json
         result = super().dict()
         
+        # Parse JSON strings to dictionaries
+        for json_field in ["analysis", "languages", "frameworks", "code_style", "metadata"]:
+            try:
+                result[json_field] = json.loads(result[json_field])
+            except (TypeError, json.JSONDecodeError):
+                result[json_field] = {}
+        
         # Add language summary
-        if self.languages:
-            primary_language = max(self.languages.items(), key=lambda x: x[1])[0] if self.languages else None
+        if result["languages"]:
+            primary_language = max(result["languages"].items(), key=lambda x: x[1])[0] if result["languages"] else None
             result["primary_language"] = primary_language
             
         # Add framework summary
-        if self.frameworks:
-            result["primary_frameworks"] = list(self.frameworks.keys())[:3] if self.frameworks else []
+        if result["frameworks"]:
+            result["primary_frameworks"] = list(result["frameworks"].keys())[:3] if result["frameworks"] else []
             
         # Don't include tasks or PRs by default (could be many)
         return result

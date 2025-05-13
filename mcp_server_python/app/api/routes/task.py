@@ -2,11 +2,12 @@
 Task API routes
 """
 
+import json
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query, status
-from fastapi_pagination import Page
-from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination import Page, add_pagination
+from fastapi_pagination.ext.async_sqlalchemy import paginate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -45,9 +46,9 @@ async def create_task(
         project=task_in.project,
         title=task_in.title,
         description=task_in.description,
-        status=TaskStatus.PENDING,
+        status=TaskStatus.PENDING.value,
         priority=task_in.priority,
-        requirements=task_in.requirements.dict() if task_in.requirements else {},
+        requirements=json.dumps(task_in.requirements.dict() if task_in.requirements else {}),
     )
     
     # Save to database
@@ -86,7 +87,7 @@ async def read_tasks(
     if project:
         query = query.filter(Task.project == project)
     if status:
-        query = query.filter(Task.status == status)
+        query = query.filter(Task.status == status.value)
     
     # Order by priority and creation date
     query = query.order_by(Task.priority.desc(), Task.created_at.desc())
@@ -144,7 +145,11 @@ async def update_task(
     
     for field, value in update_data.items():
         if field == "requirements" and value is not None:
-            setattr(db_task, field, value.dict())
+            setattr(db_task, field, json.dumps(value.dict()))
+        elif field == "status" and value is not None:
+            setattr(db_task, field, value.value)
+        elif field == "metadata" and value is not None:
+            setattr(db_task, field, json.dumps(value))
         else:
             setattr(db_task, field, value)
     
@@ -181,3 +186,7 @@ async def delete_task(
     await db.commit()
     
     logger.info("Task deleted successfully", task_id=task_id)
+
+
+# Add pagination to router
+add_pagination(router)
