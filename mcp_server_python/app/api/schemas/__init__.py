@@ -1,0 +1,3 @@
+"""
+API schemas package initialization
+"""
